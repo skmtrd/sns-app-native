@@ -9,15 +9,13 @@ import {
 } from "react-native";
 import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-import { ThemedText } from "@/components/ThemedText";
-import { ThemedView } from "@/components/ThemedView";
 import Header from "@/components/ui/Header";
 import { useTheme } from "@react-navigation/native";
 import { ApiResponse, Assignment } from "@/constants/types";
 import AssignmentCard from "@/components/ui/AssignmentCard";
 import { fetchAssignment } from "../utils/functions";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Folder } from "lucide-react-native";
 
 export default function HomeScreen() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -45,7 +43,6 @@ export default function HomeScreen() {
     };
 
     loadPosts();
-    console.log("load");
   }, []);
 
   const reload = async () => {
@@ -97,6 +94,9 @@ export default function HomeScreen() {
               </View>
             </TouchableOpacity>
           </View>
+          <TouchableOpacity onPress={clear}>
+            <Folder size={30}></Folder>
+          </TouchableOpacity>
           <ScrollView contentContainerStyle={darkStyles.scrollView}>
             {selectedTab
               ? assignments.map((item) => (
@@ -104,6 +104,11 @@ export default function HomeScreen() {
                     key={item.id}
                     item={item}
                     styles={darkStyles}
+                    alreadySaved={
+                      savedAssignments.filter((saved) => saved.id === item.id)
+                        .length > 0
+                    }
+                    reload={reload}
                   />
                 ))
               : savedAssignments.map((item) => (
@@ -111,6 +116,11 @@ export default function HomeScreen() {
                     key={item.id}
                     item={item}
                     styles={darkStyles}
+                    alreadySaved={
+                      savedAssignments.filter((saved) => saved.id === item.id)
+                        .length > 0
+                    }
+                    reload={reload}
                   />
                 ))}
           </ScrollView>
@@ -124,7 +134,16 @@ export default function HomeScreen() {
           <Header title="課題一覧" />
           <ScrollView contentContainerStyle={lightStyles.scrollView}>
             {assignments.map((item) => (
-              <AssignmentCard key={item.id} item={item} styles={lightStyles} />
+              <AssignmentCard
+                key={item.id}
+                item={item}
+                styles={lightStyles}
+                alreadySaved={
+                  savedAssignments.filter((saved) => saved.id === item.id)
+                    .length > 0
+                }
+                reload={reload}
+              />
             ))}
           </ScrollView>
         </SafeAreaView>
@@ -161,7 +180,7 @@ const darkStyles = StyleSheet.create({
   },
   card: {
     borderRadius: 15,
-    padding: 20,
+    padding: 25,
     backgroundColor: "#1c1c1e",
   },
   title: {
@@ -178,7 +197,8 @@ const darkStyles = StyleSheet.create({
   },
   cardFooter: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
   },
   calendarIcon: {
     fontSize: 16,
@@ -190,15 +210,7 @@ const darkStyles = StyleSheet.create({
     fontWeight: "bold",
   },
   registerButton: {
-    backgroundColor: "#007AFF",
-    padding: 8,
     borderRadius: 5,
-    marginLeft: "auto",
-  },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "bold",
   },
 });
 
@@ -242,14 +254,8 @@ const lightStyles = StyleSheet.create({
     fontWeight: "bold",
   },
   registerButton: {
-    backgroundColor: "#007AFF",
     padding: 8,
     borderRadius: 5,
     marginLeft: "auto",
-  },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "bold",
   },
 });
