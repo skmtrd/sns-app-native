@@ -14,101 +14,27 @@ import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import Header from "@/components/ui/Header";
 import { useTheme } from "@react-navigation/native";
-
-type DateString = string; // ISO 8601形式 "YYYY-MM-DDTHH:mm:ss.sssZ"
-type DeadlineString = string; // "YYYY-MM-DD/HH:mm" 形式
-
-type CurrentSession = {
-  currentDateTime: DateString;
-  currentUserLogin: string;
-};
-
-type Assignment = {
-  id: string;
-  title: string;
-  description: string;
-  deadLine: DeadlineString;
-  imageUrl: string | null;
-  authorId: string;
-  createdAt: DateString;
-  updatedAt: DateString;
-  replies: Reply[];
-  likes: Like[];
-  author: User;
-};
-
-type Like = {
-  id: string;
-  userId: string;
-  postId: string | null;
-  assignmentId: string;
-  questionId: string | null;
-  createdAt: DateString;
-  updatedAt: DateString;
-  user: User;
-};
-
-type User = {
-  id: string;
-  name: string;
-  email: string;
-  emailVerified: string | null;
-  image: string;
-  introduction: string | null;
-  iconUrl: string | null;
-  createdAt: DateString;
-  updatedAt: DateString;
-  tags?: Tag[];
-};
-
-type Tag = {
-  id: string;
-  name: string;
-  createdAt: DateString;
-  updatedAt: DateString;
-};
-
-type Reply = {
-  id: string;
-  content: string;
-  authorId: string;
-  assignmentId: string;
-  createdAt: DateString;
-  updatedAt: DateString;
-};
-
-type ApiResponse = {
-  message: string;
-  data: Assignment[];
-};
+import { ApiResponse, Assignment } from "@/constants/types";
+import AssignmentCard from "@/components/ui/AssignmentCard";
+import { fetchAssignment } from "../utils/functions";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function HomeScreen() {
-  // fetch関数
-  const fetchAssignment = async (): Promise<Assignment[]> => {
-    try {
-      const response = await fetch(
-        "https://iniad-sns.vercel.app/api/assignment"
-      );
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
-      const data: ApiResponse = await response.json();
-      return data.data;
-    } catch (error) {
-      console.error("Error fetching posts:", error);
-      throw error;
-    }
-  };
-
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [savedAssignments, setSavedAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [selectedTab, setSelectedTab] = useState(true);
 
   useEffect(() => {
     const loadPosts = async () => {
       try {
         const fetchedAssignments = await fetchAssignment();
         setAssignments(fetchedAssignments);
+        const savedAssignmnets = await AsyncStorage.getItem("savedAssignments");
+        setSavedAssignments(
+          savedAssignmnets ? JSON.parse(savedAssignmnets) : []
+        );
       } catch (err) {
         setError(
           err instanceof Error ? err : new Error("Unknown error occurred")
@@ -119,19 +45,23 @@ export default function HomeScreen() {
     };
 
     loadPosts();
+    console.log("load");
   }, []);
 
-  const AssignmentCard = (item: Assignment, styles: any) => (
-    <TouchableOpacity key={item.id} activeOpacity={0.9}>
-      <View style={styles.card}>
-        <Text style={styles.title}>{item.title}</Text>
-        <Text style={styles.description}>{item.description}</Text>
-        <View style={styles.cardFooter}>
-          <Text style={styles.dueDate}>{item.deadLine}まで</Text>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
+  const reload = async () => {
+    const savedAssignmnets = await AsyncStorage.getItem("savedAssignments");
+    setSavedAssignments(savedAssignmnets ? JSON.parse(savedAssignmnets) : []);
+  };
+
+  const clear = async () => {
+    console.log("clear");
+    await AsyncStorage.setItem("savedAssignments", JSON.stringify([]));
+  };
+
+  const handleToggleTab = (boolean: boolean) => {
+    setSelectedTab(boolean);
+    reload();
+  };
 
   const theme = useTheme();
   if (theme.dark) {
@@ -139,8 +69,50 @@ export default function HomeScreen() {
       <View style={darkStyles.container}>
         <SafeAreaView>
           <Header title="課題一覧" />
+          <View style={darkStyles.headerTab}>
+            <TouchableOpacity onPress={() => handleToggleTab(true)}>
+              <View
+                style={[
+                  darkStyles.headerTabItem,
+                  {
+                    borderBottomColor: "white",
+                    borderBottomWidth: selectedTab ? 2 : 0,
+                  },
+                ]}
+              >
+                <Text style={darkStyles.headerTabText}>課題一覧</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => handleToggleTab(false)}>
+              <View
+                style={[
+                  darkStyles.headerTabItem,
+                  {
+                    borderBottomColor: "white",
+                    borderBottomWidth: selectedTab ? 0 : 2,
+                  },
+                ]}
+              >
+                <Text style={darkStyles.headerTabText}>登録済み</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
           <ScrollView contentContainerStyle={darkStyles.scrollView}>
-            {assignments.map((item) => AssignmentCard(item, darkStyles))}
+            {selectedTab
+              ? assignments.map((item) => (
+                  <AssignmentCard
+                    key={item.id}
+                    item={item}
+                    styles={darkStyles}
+                  />
+                ))
+              : savedAssignments.map((item) => (
+                  <AssignmentCard
+                    key={item.id}
+                    item={item}
+                    styles={darkStyles}
+                  />
+                ))}
           </ScrollView>
         </SafeAreaView>
       </View>
@@ -151,7 +123,9 @@ export default function HomeScreen() {
         <SafeAreaView>
           <Header title="課題一覧" />
           <ScrollView contentContainerStyle={lightStyles.scrollView}>
-            {assignments.map((item) => AssignmentCard(item, lightStyles))}
+            {assignments.map((item) => (
+              <AssignmentCard key={item.id} item={item} styles={lightStyles} />
+            ))}
           </ScrollView>
         </SafeAreaView>
       </View>
@@ -163,6 +137,23 @@ const darkStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#000000",
+  },
+  headerTab: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+    alignItems: "center",
+  },
+  headerTabItem: {
+    paddingVertical: 20,
+    paddingHorizontal: 100,
+    borderBottomColor: "white",
+    borderBottomWidth: 2,
+  },
+  headerTabText: {
+    fontSize: 20,
+    color: "white",
+    fontWeight: "bold",
   },
   scrollView: {
     padding: 20,
@@ -196,6 +187,17 @@ const darkStyles = StyleSheet.create({
   dueDate: {
     fontSize: 12,
     color: "#ff0000",
+    fontWeight: "bold",
+  },
+  registerButton: {
+    backgroundColor: "#007AFF",
+    padding: 8,
+    borderRadius: 5,
+    marginLeft: "auto",
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
     fontWeight: "bold",
   },
 });
@@ -237,6 +239,17 @@ const lightStyles = StyleSheet.create({
   dueDate: {
     fontSize: 12,
     color: "#ff0000",
+    fontWeight: "bold",
+  },
+  registerButton: {
+    backgroundColor: "#007AFF",
+    padding: 8,
+    borderRadius: 5,
+    marginLeft: "auto",
+  },
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
     fontWeight: "bold",
   },
 });
