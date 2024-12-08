@@ -15,7 +15,27 @@ import { ApiResponse, Assignment } from "@/constants/types";
 import AssignmentCard from "@/components/ui/AssignmentCard";
 import { fetchAssignment } from "../utils/functions";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Notifications from "expo-notifications";
 import { Folder } from "lucide-react-native";
+import {
+  type NotificationContentInput,
+  type TimeIntervalTriggerInput,
+} from "expo-notifications";
+
+const trigger: TimeIntervalTriggerInput = {
+  seconds: 5,
+  type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+};
+async function sendImmediateNotification(title: string, body: string) {
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: title,
+      body: body,
+      data: { data: "データを追加できます" },
+    },
+    trigger,
+  });
+}
 
 export default function HomeScreen() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -92,6 +112,13 @@ export default function HomeScreen() {
               >
                 <Text style={darkStyles.headerTabText}>登録済み</Text>
               </View>
+            </TouchableOpacity>
+          </View>
+          <View>
+            <TouchableOpacity
+              onPress={() => sendImmediateNotification("テスト", "tesuto")}
+            >
+              <Folder size={100}></Folder>
             </TouchableOpacity>
           </View>
           <ScrollView contentContainerStyle={darkStyles.scrollView}>
