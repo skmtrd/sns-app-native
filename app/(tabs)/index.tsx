@@ -94,9 +94,6 @@ export default function HomeScreen() {
               </View>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={clear}>
-            <Folder size={30}></Folder>
-          </TouchableOpacity>
           <ScrollView contentContainerStyle={darkStyles.scrollView}>
             {selectedTab
               ? assignments.map((item) => (
