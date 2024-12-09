@@ -2,7 +2,8 @@ import { Assignment } from "@/constants/types";
 import { TouchableOpacity, View, Text } from "react-native";
 import { Folder, FolderOpen } from "lucide-react-native";
 import { useState } from "react";
-import { handleSaveButton } from "@/app/utils/functions";
+import { convertDateFormat, handleSaveButton } from "@/app/utils/functions";
+import { useDeadline } from "@/hooks/useDeadline";
 type AssignmentCardProps = {
   item: Assignment;
   styles: any;
@@ -18,6 +19,8 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({
 }) => {
   const [isSaved, setIsSaved] = useState(alreadySaved);
 
+  const limit = useDeadline(item.deadLine);
+
   const handleRegister = async () => {
     try {
       const newSaveState = await handleSaveButton(item);
@@ -29,13 +32,21 @@ const AssignmentCard: React.FC<AssignmentCardProps> = ({
     }
   };
 
+  const deadlineItems = convertDateFormat(item.deadLine);
+
   return (
     <TouchableOpacity activeOpacity={0.9}>
       <View style={styles.card}>
         <Text style={styles.title}>{item.title}</Text>
         <Text style={styles.description}>{item.description}</Text>
         <View style={styles.cardFooter}>
-          <Text style={styles.dueDate}>{item.deadLine}まで</Text>
+          <View>
+            <Text style={styles.dueDate}>
+              {deadlineItems.month}月{deadlineItems.day}日{deadlineItems.hour}時
+              {deadlineItems.minute}分まで
+            </Text>
+            <Text style={styles.dueDate}>残り{limit}</Text>
+          </View>
           <TouchableOpacity
             style={styles.registerButton}
             onPress={handleRegister}
