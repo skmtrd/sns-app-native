@@ -1,189 +1,96 @@
-import {
-  StyleSheet,
-  FlatList,
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  ViewBase,
-} from "react-native";
+import { View, Text, TouchableOpacity, Linking } from "react-native";
 import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Header from "@/components/ui/Header";
-import { useTheme } from "@react-navigation/native";
-import { Assignment } from "@/constants/types";
-import AssignmentCard from "@/components/ui/AssignmentCard";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { TimeIntervalTriggerInput } from "expo-notifications/build/Notifications.types";
+import * as Notifications from "expo-notifications";
+import { useNavigation } from "expo-router";
+import { CalendarTriggerInput } from "expo-notifications/build/Notifications.types";
 
-export default function HomeScreen() {
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+const trigger: CalendarTriggerInput = {
+  year: 2024,
+  month: 12,
+  day: 9,
+  hour: 16,
+  minute: 44,
+  type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+};
 
-  useEffect(() => {
-    const loadPosts = async () => {
-      try {
-        await AsyncStorage.setItem("savedAssignments", JSON.stringify([]));
-        const fetchedAssignments = await AsyncStorage.getItem(
-          "savedAssignments"
-        );
-        console.log(fetchedAssignments);
-        setAssignments(
-          fetchedAssignments ? JSON.parse(fetchedAssignments) : []
-        );
-      } catch (err) {
-        setError(
-          err instanceof Error ? err : new Error("Unknown error occurred")
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
+// 通知をスケジュールする関数
+async function scheduleHourlyNotification(title: string, body: string) {
+  const notificationId = await Notifications.scheduleNotificationAsync({
+    content: {
+      title: title,
+      body: body,
+      data: { data: "データを追加できます" },
+    },
+    trigger,
+  });
 
-    loadPosts();
-  }, []);
+  return notificationId; // 後でキャンセルできるようにIDを返す
+}
 
-  const reload = async () => {
-    console.log("reload");
-    const savedAssignmnets = await AsyncStorage.getItem("savedAssignments");
-    console.log(savedAssignmnets);
-  };
-
-  const theme = useTheme();
-  if (theme.dark) {
-    return (
-      <View style={darkStyles.container}>
-        <View style={darkStyles.card}>
-          <TouchableOpacity onPress={reload}>
-            <Text style={darkStyles.buttonText}>リロード</Text>
-          </TouchableOpacity>
-        </View>
-        <SafeAreaView>
-          <Header title="課題一覧" />
-          <ScrollView contentContainerStyle={darkStyles.scrollView}>
-            {assignments.map((item) => (
-              <AssignmentCard key={item.id} item={item} styles={darkStyles} />
-            ))}
-          </ScrollView>
-        </SafeAreaView>
-      </View>
-    );
-  } else {
-    return (
-      <View style={lightStyles.container}>
-        <SafeAreaView>
-          <Header title="課題一覧" />
-          <ScrollView contentContainerStyle={lightStyles.scrollView}>
-            {assignments.map((item) => (
-              <AssignmentCard key={item.id} item={item} styles={lightStyles} />
-            ))}
-          </ScrollView>
-        </SafeAreaView>
-      </View>
-    );
+async function cancelNotification(notificationId: string) {
+  try {
+    await Notifications.cancelScheduledNotificationAsync(notificationId);
+    console.log("通知がキャンセルされました");
+  } catch (error) {
+    console.error("通知のキャンセルに失敗しました:", error);
   }
 }
 
-const darkStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#000000",
-  },
-  scrollView: {
-    padding: 20,
-    gap: 20,
-  },
-  card: {
-    borderRadius: 15,
-    padding: 20,
-    backgroundColor: "#1c1c1e",
-  },
-  title: {
-    fontSize: 15,
-    color: "#fff",
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  description: {
-    fontSize: 14,
-    color: "#98989f",
-    fontWeight: "semibold",
-    marginBottom: 8,
-  },
-  cardFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  calendarIcon: {
-    fontSize: 16,
-    marginRight: 4,
-  },
-  dueDate: {
-    fontSize: 12,
-    color: "#ff0000",
-    fontWeight: "bold",
-  },
-  registerButton: {
-    backgroundColor: "#007AFF",
-    padding: 8,
-    borderRadius: 5,
-    marginLeft: "auto",
-  },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-});
+export default function HomeScreen() {
+  const [activeNotificationId, setActiveNotificationId] = useState<string[]>(
+    []
+  );
+  const navigation = useNavigation();
 
-const lightStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f2f2f7",
-  },
-  scrollView: {
-    padding: 20,
-    gap: 20,
-  },
-  card: {
-    borderRadius: 15,
-    padding: 20,
-    backgroundColor: "#ffffff",
-  },
-  title: {
-    fontSize: 15,
-    color: "black",
-    fontWeight: "bold",
-    marginBottom: 8,
-  },
-  description: {
-    fontSize: 14,
-    color: "#8a8a8e",
-    fontWeight: "semibold",
-    marginBottom: 8,
-  },
-  cardFooter: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  calendarIcon: {
-    fontSize: 16,
-    marginRight: 4,
-  },
-  dueDate: {
-    fontSize: 12,
-    color: "#ff0000",
-    fontWeight: "bold",
-  },
-  registerButton: {
-    backgroundColor: "#007AFF",
-    padding: 8,
-    borderRadius: 5,
-    marginLeft: "auto",
-  },
-  buttonText: {
-    color: "#FFFFFF",
-    fontSize: 14,
-    fontWeight: "bold",
-  },
-});
+  const startNotification = async () => {
+    const id = await scheduleHourlyNotification("dsa", "1時間ごとの通知です");
+    setActiveNotificationId([...activeNotificationId, id]);
+  };
+
+  const stopNotification = async () => {
+    if (activeNotificationId) {
+      for (const id of activeNotificationId) {
+        await cancelNotification(id);
+      }
+      setActiveNotificationId([]);
+    }
+  };
+
+  const handlePress = async () => {
+    const url = "https://x.com";
+    const supported = await Linking.canOpenURL(url);
+
+    if (supported) {
+      await Linking.openURL(url);
+    } else {
+      console.log(`このURLは開けません: ${url}`);
+    }
+  };
+
+  return (
+    <View>
+      <SafeAreaView>
+        <TouchableOpacity onPress={handlePress}>
+          <Text style={{ color: "blue", textDecorationLine: "underline" }}>
+            他の画面へ移動
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={startNotification}>
+          <Text>通知</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={stopNotification}>
+          <Text>キャンセル</Text>
+        </TouchableOpacity>
+        {
+          // 通知のIDを表示
+          activeNotificationId.map((id) => {
+            return <Text key={id}>{id}</Text>;
+          })
+        }
+      </SafeAreaView>
+    </View>
+  );
+}

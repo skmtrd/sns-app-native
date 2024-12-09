@@ -4,12 +4,63 @@ import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Folder, FolderOpen } from "lucide-react-native";
 import { useState } from "react";
+import * as Notifications from "expo-notifications";
+import { CalendarTriggerInput } from "expo-notifications/build/Notifications.types";
+
 type AssignmentCardProps = {
   item: Assignment;
   styles: any;
   alreadySaved: boolean;
   reload: () => void;
 };
+
+type DateComponents = {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+};
+
+function convertDateFormat(dateString: string): DateComponents {
+  const [datePart, timePart] = dateString.split("/");
+  const [year, month, day] = datePart.split("-");
+  const [hour, minute] = timePart.split(":");
+
+  return {
+    year: parseInt(year),
+    month: parseInt(month),
+    day: parseInt(day),
+    hour: parseInt(hour),
+    minute: parseInt(minute),
+  };
+}
+
+async function setNotification(assignment: Assignment) {
+  const trigger: CalendarTriggerInput = {
+    ...convertDateFormat(assignment.deadLine),
+    type: Notifications.SchedulableTriggerInputTypes.CALENDAR,
+  };
+
+  const notificationId = await Notifications.scheduleNotificationAsync({
+    content: {
+      title: assignment.title,
+      body: assignment.description,
+      data: { data: "データを追加できます" },
+    },
+    trigger,
+  });
+
+  return notificationId;
+}
+
+async function cancelNotification(notificationId: string) {
+  try {
+    await Notifications.cancelScheduledNotificationAsync(notificationId);
+  } catch (error) {
+    console.error("通知のキャンセルに失敗しました:", error);
+  }
+}
 
 const handleSaveButton = async (assignment: Assignment) => {
   try {
@@ -27,16 +78,12 @@ const handleSaveButton = async (assignment: Assignment) => {
       newAssignments = parsedAssignments.filter(
         (saved: Assignment) => saved.id !== assignment.id
       );
-      Toast.show({
-        type: "success",
-        text1: "課題を削除しました",
-      });
+      const notificationId = await AsyncStorage.getItem(assignment.id);
+      await cancelNotification(notificationId ?? "");
     } else {
       newAssignments = [...parsedAssignments, assignment];
-      Toast.show({
-        type: "success",
-        text1: "課題を保存しました",
-      });
+      const notificationId = await setNotification(assignment);
+      await AsyncStorage.setItem(assignment.id, notificationId);
     }
 
     await AsyncStorage.setItem(
