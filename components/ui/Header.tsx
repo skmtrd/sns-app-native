@@ -21,7 +21,8 @@ const Header = ({ title }: { title: string }) => {
 
 const darkStyles = StyleSheet.create({
   header: {
-    padding: 25,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
   },
   text: {
     fontSize: 20,
@@ -32,7 +33,8 @@ const darkStyles = StyleSheet.create({
 
 const lightStyles = StyleSheet.create({
   header: {
-    padding: 25,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
   },
   text: {
     fontSize: 20,

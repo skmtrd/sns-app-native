@@ -11,12 +11,11 @@ import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Header from "@/components/ui/Header";
 import { useTheme } from "@react-navigation/native";
-import { ApiResponse, Assignment } from "@/constants/types";
+import { Assignment } from "@/constants/types";
 import AssignmentCard from "@/components/ui/AssignmentCard";
 import { fetchAssignment } from "../utils/functions";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
-import { Folder } from "lucide-react-native";
 import {
   type NotificationContentInput,
   type TimeIntervalTriggerInput,
@@ -190,6 +189,7 @@ const darkStyles = StyleSheet.create({
   scrollView: {
     padding: 20,
     gap: 20,
+    paddingBottom: 200,
   },
   card: {
     borderRadius: 15,
@@ -252,6 +252,7 @@ const lightStyles = StyleSheet.create({
   scrollView: {
     padding: 20,
     gap: 20,
+    paddingBottom: 200,
   },
   card: {
     borderRadius: 15,
