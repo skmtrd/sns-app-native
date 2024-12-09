@@ -1,12 +1,4 @@
-import {
-  StyleSheet,
-  FlatList,
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  ViewBase,
-} from "react-native";
+import { StyleSheet, View, ScrollView } from "react-native";
 import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Header from "@/components/ui/Header";

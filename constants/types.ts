@@ -64,3 +64,11 @@ export type ApiResponse = {
   message: string;
   data: Assignment[];
 };
+
+export type DateComponents = {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+};
