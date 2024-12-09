@@ -21,6 +21,7 @@ import {
   type NotificationContentInput,
   type TimeIntervalTriggerInput,
 } from "expo-notifications";
+import HeaderTab from "@/components/ui/HeaderTab";
 
 const trigger: TimeIntervalTriggerInput = {
   seconds: 5,
@@ -86,41 +87,11 @@ export default function HomeScreen() {
       <View style={darkStyles.container}>
         <SafeAreaView>
           <Header title="課題一覧" />
-          <View style={darkStyles.headerTab}>
-            <TouchableOpacity onPress={() => handleToggleTab(true)}>
-              <View
-                style={[
-                  darkStyles.headerTabItem,
-                  {
-                    borderBottomColor: "white",
-                    borderBottomWidth: selectedTab ? 2 : 0,
-                  },
-                ]}
-              >
-                <Text style={darkStyles.headerTabText}>課題一覧</Text>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleToggleTab(false)}>
-              <View
-                style={[
-                  darkStyles.headerTabItem,
-                  {
-                    borderBottomColor: "white",
-                    borderBottomWidth: selectedTab ? 0 : 2,
-                  },
-                ]}
-              >
-                <Text style={darkStyles.headerTabText}>登録済み</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-          <View>
-            <TouchableOpacity
-              onPress={() => sendImmediateNotification("テスト", "tesuto")}
-            >
-              <Folder size={100}></Folder>
-            </TouchableOpacity>
-          </View>
+          <HeaderTab
+            selectedTab={selectedTab}
+            handleToggleTab={handleToggleTab}
+            styles={darkStyles}
+          />
           <ScrollView contentContainerStyle={darkStyles.scrollView}>
             {selectedTab
               ? assignments.map((item) => (
@@ -156,19 +127,37 @@ export default function HomeScreen() {
       <View style={lightStyles.container}>
         <SafeAreaView>
           <Header title="課題一覧" />
+          <HeaderTab
+            selectedTab={selectedTab}
+            handleToggleTab={handleToggleTab}
+            styles={lightStyles}
+          />
           <ScrollView contentContainerStyle={lightStyles.scrollView}>
-            {assignments.map((item) => (
-              <AssignmentCard
-                key={item.id}
-                item={item}
-                styles={lightStyles}
-                alreadySaved={
-                  savedAssignments.filter((saved) => saved.id === item.id)
-                    .length > 0
-                }
-                reload={reload}
-              />
-            ))}
+            {selectedTab
+              ? assignments.map((item) => (
+                  <AssignmentCard
+                    key={item.id}
+                    item={item}
+                    styles={lightStyles}
+                    alreadySaved={
+                      savedAssignments.filter((saved) => saved.id === item.id)
+                        .length > 0
+                    }
+                    reload={reload}
+                  />
+                ))
+              : savedAssignments.map((item) => (
+                  <AssignmentCard
+                    key={item.id}
+                    item={item}
+                    styles={lightStyles}
+                    alreadySaved={
+                      savedAssignments.filter((saved) => saved.id === item.id)
+                        .length > 0
+                    }
+                    reload={reload}
+                  />
+                ))}
           </ScrollView>
         </SafeAreaView>
       </View>
@@ -189,8 +178,8 @@ const darkStyles = StyleSheet.create({
   },
   headerTabItem: {
     paddingVertical: 20,
-    paddingHorizontal: 100,
-    borderBottomColor: "white",
+    paddingHorizontal: 10,
+    borderBottomColor: "#0000ff",
     borderBottomWidth: 2,
   },
   headerTabText: {
@@ -243,18 +232,35 @@ const lightStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f2f2f7",
   },
+  headerTab: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-evenly",
+    alignItems: "center",
+  },
+  headerTabItem: {
+    paddingVertical: 20,
+    paddingHorizontal: 10,
+    borderBottomColor: "#0000ff",
+    borderBottomWidth: 2,
+  },
+  headerTabText: {
+    fontSize: 20,
+    color: "#000000",
+    fontWeight: "bold",
+  },
   scrollView: {
     padding: 20,
     gap: 20,
   },
   card: {
     borderRadius: 15,
-    padding: 20,
+    padding: 25,
     backgroundColor: "#ffffff",
   },
   title: {
     fontSize: 15,
-    color: "black",
+    color: "#000",
     fontWeight: "bold",
     marginBottom: 8,
   },
@@ -266,7 +272,8 @@ const lightStyles = StyleSheet.create({
   },
   cardFooter: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
   },
   calendarIcon: {
     fontSize: 16,
@@ -278,8 +285,52 @@ const lightStyles = StyleSheet.create({
     fontWeight: "bold",
   },
   registerButton: {
-    padding: 8,
     borderRadius: 5,
-    marginLeft: "auto",
   },
 });
+
+// const lightStyles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     backgroundColor: "#f2f2f7",
+//   },
+//   scrollView: {
+//     padding: 20,
+//     gap: 20,
+//   },
+//   card: {
+//     borderRadius: 15,
+//     padding: 20,
+//     backgroundColor: "#ffffff",
+//   },
+//   title: {
+//     fontSize: 15,
+//     color: "black",
+//     fontWeight: "bold",
+//     marginBottom: 8,
+//   },
+//   description: {
+//     fontSize: 14,
+//     color: "#8a8a8e",
+//     fontWeight: "semibold",
+//     marginBottom: 8,
+//   },
+//   cardFooter: {
+//     flexDirection: "row",
+//     alignItems: "center",
+//   },
+//   calendarIcon: {
+//     fontSize: 16,
+//     marginRight: 4,
+//   },
+//   dueDate: {
+//     fontSize: 12,
+//     color: "#ff0000",
+//     fontWeight: "bold",
+//   },
+//   registerButton: {
+//     padding: 8,
+//     borderRadius: 5,
+//     marginLeft: "auto",
+//   },
+// });
