@@ -11,11 +11,13 @@ import { useEffect, useState } from "react";
 import "react-native-reanimated";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
-import { Platform } from "react-native";
+import { View } from "react-native";
 
 import { useColorScheme } from "@/hooks/useColorScheme";
 
-// 通知の表示設定
+// スプラッシュスクリーンを維持
+SplashScreen.preventAutoHideAsync();
+
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -33,19 +35,15 @@ export default function RootLayout() {
 
   useEffect(() => {
     const f = async (): Promise<void> => {
-      // 現在の権限を取得
       const { status: existingStatus } =
         await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
 
-      // grantedは「許可済み」それ以外の時は、権限をリクエストする
       if (existingStatus !== "granted") {
-        // 上の画像のメッセージが表示される
         const { status } = await Notifications.requestPermissionsAsync();
         finalStatus = status;
       }
       if (finalStatus !== "granted") {
-        // 拒否された時のフラグを取得しておく
         setGranted(false);
         return;
       }
@@ -53,6 +51,7 @@ export default function RootLayout() {
 
     f();
   }, []);
+
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack>
